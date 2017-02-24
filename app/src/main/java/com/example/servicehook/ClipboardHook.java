@@ -25,8 +25,8 @@ public class ClipboardHook {
 
         if (clipboardService != null) {
             IBinder hookClipboardService =
-                    (IBinder) Proxy.newProxyInstance(IBinder.class.getClassLoader(),
-                            new Class[]{IBinder.class},
+                    (IBinder) Proxy.newProxyInstance(clipboardService.getClass().getClassLoader(),
+                            clipboardService.getClass().getInterfaces(),
                             new ServiceHook(clipboardService, IClipboard, true, new ClipboardHookHandler()));
             ServiceManager.setService(Context.CLIPBOARD_SERVICE, hookClipboardService);
         } else {

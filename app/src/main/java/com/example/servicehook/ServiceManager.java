@@ -17,7 +17,6 @@ public class ServiceManager {
 
     private static Method sGetServiceMethod;
     private static Map<String, IBinder> sCacheService;
-
     private static Class c_ServiceManager;
 
     static {

@@ -34,9 +34,10 @@ public class ServiceHook implements InvocationHandler {
         }
     }
 
-    @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("queryLocalInterface".equals(method.getName())) {
-            return Proxy.newProxyInstance(proxy.getClass().getClassLoader(), new Class[] { mInterface },
+            return Proxy.newProxyInstance(proxy.getClass().getClassLoader(), new Class[]{mInterface},
                     new HookHandler(mBase, mStub, mInvocationHandler));
         }
 
@@ -60,7 +61,8 @@ public class ServiceHook implements InvocationHandler {
             }
         }
 
-        @Override public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (mInvocationHandler != null) {
                 return mInvocationHandler.invoke(mBase, method, args);
             }
