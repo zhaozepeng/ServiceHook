@@ -3,8 +3,10 @@ package com.example.servicehook;
 import android.content.ClipData;
 import android.content.Context;
 import android.os.IBinder;
+import android.os.Parcel;
 import android.util.Log;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -38,6 +40,7 @@ public class ClipboardHook {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Log.e(TAG, "clipboardhookhandler invoke");
             String methodName = method.getName();
             int argsLength = args.length;
             //每次从本应用复制的文本，后面都加上分享的出处
@@ -50,6 +53,25 @@ public class ClipboardHook {
                 }
             }
             return method.invoke(proxy, args);
+        }
+    }
+
+    //用来监控 TransactionTooLargeException 错误
+    public static class TransactionWatcherHook implements InvocationHandler {
+
+        IBinder binder;
+
+        public TransactionWatcherHook(IBinder binderProxy) {
+            binder = binderProxy;
+        }
+
+        @Override
+        public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+            if (objects.length >= 2 && objects[1] instanceof Parcel) {
+                //第二个参数对应为 Parcel 对象
+                Log.e(TAG, "clipboard service invoked, transact's parameter size is " + ((Parcel)objects[1]).dataSize() + " B");
+            }
+            return method.invoke(binder, objects);
         }
     }
 }

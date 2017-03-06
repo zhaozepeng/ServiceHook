@@ -3,8 +3,8 @@ package com.example.servicehook;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
@@ -56,6 +56,15 @@ public class ServiceHook implements InvocationHandler {
             try {
                 Method asInterface = stubClass.getDeclaredMethod("asInterface", IBinder.class);
                 this.mBase = asInterface.invoke(null, base);
+
+                Class clazz = mBase.getClass();
+                Field mRemote = clazz.getDeclaredField("mRemote");
+                mRemote.setAccessible(true);
+                //新建一个 BinderProxy 的代理对象
+                Object binderProxy = Proxy.newProxyInstance(mBase.getClass().getClassLoader(),
+                        new Class[] {IBinder.class}, new ClipboardHook.TransactionWatcherHook((IBinder) mRemote.get(mBase)));
+                mRemote.set(mBase, binderProxy);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
