@@ -55,23 +55,4 @@ public class ClipboardHook {
             return method.invoke(proxy, args);
         }
     }
-
-    //用来监控 TransactionTooLargeException 错误
-    public static class TransactionWatcherHook implements InvocationHandler {
-
-        IBinder binder;
-
-        public TransactionWatcherHook(IBinder binderProxy) {
-            binder = binderProxy;
-        }
-
-        @Override
-        public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
-            if (objects.length >= 2 && objects[1] instanceof Parcel) {
-                //第二个参数对应为 Parcel 对象
-                Log.e(TAG, "clipboard service invoked, transact's parameter size is " + ((Parcel)objects[1]).dataSize() + " B");
-            }
-            return method.invoke(binder, objects);
-        }
-    }
 }

@@ -1,6 +1,8 @@
 package com.example.servicehook;
 
 import android.os.IBinder;
+import android.os.IInterface;
+import android.os.Parcel;
 import android.util.Log;
 
 import java.lang.reflect.Field;
@@ -62,9 +64,8 @@ public class ServiceHook implements InvocationHandler {
                 mRemote.setAccessible(true);
                 //新建一个 BinderProxy 的代理对象
                 Object binderProxy = Proxy.newProxyInstance(mBase.getClass().getClassLoader(),
-                        new Class[] {IBinder.class}, new ClipboardHook.TransactionWatcherHook((IBinder) mRemote.get(mBase)));
+                        new Class[] {IBinder.class}, new TransactionWatcherHook((IBinder) mRemote.get(mBase), (IInterface) mBase));
                 mRemote.set(mBase, binderProxy);
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -76,6 +77,34 @@ public class ServiceHook implements InvocationHandler {
                 return mInvocationHandler.invoke(mBase, method, args);
             }
             return method.invoke(mBase, args);
+        }
+    }
+
+    //用来监控 TransactionTooLargeException 错误
+    public static class TransactionWatcherHook implements InvocationHandler {
+
+        IBinder mBinder;
+        IInterface mInterface;
+
+        public TransactionWatcherHook(IBinder binderProxy, IInterface iInterface) {
+            mBinder = binderProxy;
+            mInterface = iInterface;
+        }
+
+        @Override
+        public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+            if (objects.length >= 2 && objects[1] instanceof Parcel && mInterface != null) {
+                //第二个参数对应为 Parcel 对象
+                Log.e(TAG, mInterface.getClass().getName() + " transact's parameter size is " + ((Parcel)objects[1]).dataSize() + " B");
+            }
+            Object object = null;
+            try {
+                object = method.invoke(mBinder, objects);
+            }catch (Exception e) {
+                Log.e(TAG, "ERROR!!!! service is " + (mInterface != null ? mInterface.getClass().getName() : "null!!!"));
+                e.printStackTrace();
+            }
+            return object;
         }
     }
 }
