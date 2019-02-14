@@ -80,6 +80,7 @@ public class WindowManagerHook {
         @Override
         public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
             try {
+                // todo you can do anything you want here!
                 Object object = method.invoke(windowManager, objects);
                 return object;
             } catch (Throwable e) {
